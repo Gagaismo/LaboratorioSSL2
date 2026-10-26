@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intérprete de Expresiones</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<header>
+  <div class="contenido">
+    <p>UTN FRT · Sintaxis y Semántica de los Lenguajes · Trabajo Práctico N° 3</p>
+    <h1>Intérprete de Expresiones Algebraicas</h1>
+    <nav>
+      <a href="#p31">3.1 PDT infija → posfija</a>
+      <a href="#p32">3.2 Evaluador SLR(1)</a>
+      <a href="informe.pdf">Informe (PDF)</a>
+      <a href="informe.html">Informe (HTML)</a>
+      <a href="modelos/PDT-Analizador-Conversor-ExpAlg-4op.jff">PDT (JFLAP)</a>
+      <a href="modelos/GICinterpretePosfijo-4op.jff">GIC (JFLAP)</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="panel" id="p31">
+    <h2>Problema 3.1 · Transductor de Pila (PDT)</h2>
+    <p class="consigna">Analiza una expresión infija con +, −, *, / y corchetes, cuyos operandos son letras minúsculas,
+      y la convierte a notación posfija. Como en JFLAP, los paréntesis se escriben con corchetes
+      (también se aceptan paréntesis, que se reemplazan por corchetes). El fin de cadena ⌂ se agrega automáticamente.</p>
+    <div class="fila">
+      <div>
+        <label for="infija">Expresión infija</label>
+        <input type="text" id="infija" value="[a+b]*c-d/e" autocomplete="off" spellcheck="false">
+      </div>
+      <div style="flex: 0 1 300px">
+        <label for="estrategia">Implementación de la tabla</label>
+        <select id="estrategia">
+          <option value="1">Estrategia 1: arreglo bidimensional</option>
+          <option value="2">Estrategia 2: arreglo tridimensional</option>
+        </select>
+      </div>
+      <div style="flex: 0 0 auto"><button id="convertir">Convertir</button></div>
+    </div>
+    <div class="ejemplos">Ejemplos:
+      <button class="secundario" data-infija="a+b*c">a+b*c</button>
+      <button class="secundario" data-infija="[a+b]*c">[a+b]*c</button>
+      <button class="secundario" data-infija="[[a+b]*c]-d">[[a+b]*c]-d</button>
+      <button class="secundario" data-infija="a-b-c/d*e">a-b-c/d*e</button>
+      <button class="secundario" data-infija="a+*b">a+*b (error)</button>
+      <button class="secundario" data-infija="[a+b">[a+b (error)</button>
+    </div>
+    <div id="res31"></div>
+    <details id="traza31-det" open>
+      <summary>Traza del PDT</summary>
+      <div class="tabla-scroll" id="traza31"></div>
+    </details>
+    <details>
+      <summary>Tabla de transición-salida del PDT</summary>
+      <div class="tabla-scroll" id="tablaPDT"></div>
+    </details>
+  </section>
+
+  <section class="panel" id="p32">
+    <h2>Problema 3.2 · Evaluador de expresiones posfijas</h2>
+    <p class="consigna">Analizador SLR(1) de la GIC S → SS+ | SS− | SS* | SS/ | a, con una pila de análisis y una pila de cálculo.
+      Los operandos pueden ser letras (se piden sus valores) o números separados por blancos, por ejemplo <code>10 4 + 2 3 * +</code>.</p>
+    <div class="fila">
+      <div>
+        <label for="posfija">Expresión posfija</label>
+        <input type="text" id="posfija" value="ab+c*de/-" autocomplete="off" spellcheck="false">
+      </div>
+      <div style="flex: 0 0 auto"><button id="evaluar">Evaluar</button></div>
+    </div>
+    <div class="valores" id="valores"></div>
+    <div id="res32"></div>
+    <details open>
+      <summary>Traza del analizador (pila de análisis y pila de cálculo)</summary>
+      <div class="tabla-scroll" id="traza32"></div>
+    </details>
+    <details>
+      <summary>Tabla de análisis SLR(1)</summary>
+      <div class="tabla-scroll" id="tablaLR"></div>
+    </details>
+  </section>
+</main>
+<footer>Trabajo Práctico N° 3 · Sintaxis y Semántica de los Lenguajes · UTN Facultad Regional Tucumán</footer>
+
+<script src="tp3.js"></script>
+<script src="vistas.js"></script>
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  var valoresPrevios = { a: 2, b: 3, c: 4, d: 10, e: 5 };
+
+  function convertir() {
+    var expr = $('infija').value.replace(/\(/g, '[').replace(/\)/g, ']');
+    var r = TP3.convertirInfijaAPosfija(expr, parseInt($('estrategia').value, 10));
+    $('res31').innerHTML = r.aceptada
+      ? '<div class="resultado ok">Cadena aceptada (q6). Expresión posfija: <code>' + r.posfija + '</code> ' +
+        '<button class="secundario" id="pasar">Evaluar en 3.2 →</button></div>'
+      : '<div class="resultado error">Cadena rechazada: el PDT llegó al estado sumidero q9 (transición no definida).</div>';
+    $('traza31').innerHTML = Vistas.trazaPDT(r.traza);
+    if (r.aceptada) $('pasar').onclick = function () {
+      $('posfija').value = r.posfija;
+      actualizarValores();
+      evaluar();
+      $('p32').scrollIntoView({ behavior: 'smooth' });
+    };
+  }
+
+  function letras() {
+    var vistas = {};
+    return $('posfija').value.split('').filter(function (c) {
+      if (c < 'a' || c > 'z' || vistas[c]) return false;
+      return (vistas[c] = true);
+    });
+  }
+
+  function actualizarValores() {
+    document.querySelectorAll('#valores input').forEach(function (inp) { valoresPrevios[inp.dataset.letra] = inp.value; });
+    $('valores').innerHTML = letras().map(function (c) {
+      var v = valoresPrevios[c] !== undefined ? valoresPrevios[c] : '';
+      return '<div><label for="v_' + c + '">' + c + ' =</label><input type="number" step="any" id="v_' + c + '" data-letra="' + c + '" value="' + v + '"></div>';
+    }).join('');
+  }
+
+  function evaluar() {
+    var valores = {};
+    document.querySelectorAll('#valores input').forEach(function (inp) { valores[inp.dataset.letra] = inp.value; });
+    var r = TP3.evaluarPosfija($('posfija').value, valores);
+    $('res32').innerHTML = r.aceptada
+      ? '<div class="resultado ok">Expresión aceptada. Resultado (único valor en la pila de cálculo): <code>' + TP3.formatear(r.resultado) + '</code></div>'
+      : '<div class="resultado error">' + r.error + '</div>';
+    $('traza32').innerHTML = Vistas.trazaLR(r.traza);
+  }
+
+  $('convertir').onclick = convertir;
+  $('infija').onkeydown = function (e) { if (e.key === 'Enter') convertir(); };
+  $('estrategia').onchange = convertir;
+  document.querySelectorAll('[data-infija]').forEach(function (b) {
+    b.onclick = function () { $('infija').value = b.dataset.infija; convertir(); };
+  });
+  $('evaluar').onclick = evaluar;
+  $('posfija').oninput = actualizarValores;
+  $('posfija').onkeydown = function (e) { if (e.key === 'Enter') evaluar(); };
+
+  $('tablaPDT').innerHTML = Vistas.tablaPDT();
+  $('tablaLR').innerHTML = Vistas.tablaLR();
+  actualizarValores();
+  convertir();
+  evaluar();
+</script>
+</body>
+</html>

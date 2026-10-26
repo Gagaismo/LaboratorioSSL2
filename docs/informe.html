@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe TP N° 3</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm 18mm 18mm; }
+  body { font: 11pt/1.45 "Times New Roman", Georgia, serif; color: #111; background: #fff; max-width: 820px; margin: 0 auto; padding: 16px; }
+  @media print { body { padding: 0; max-width: none; } }
+  h1 { font-size: 20pt; margin: 0 0 6px; }
+  h2 { font-size: 15pt; border-bottom: 1.5px solid #222; padding-bottom: 3px; margin: 26px 0 10px; break-after: avoid; }
+  h3 { font-size: 12.5pt; margin: 18px 0 6px; break-after: avoid; }
+  p { margin: 6px 0; text-align: justify; }
+  code, .mono { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; }
+  pre { font: 9pt/1.35 Consolas, "Courier New", monospace; background: #f5f5f5; border: 1px solid #ccc; padding: 8px 10px; white-space: pre-wrap; break-inside: avoid; }
+  pre.codigo { break-inside: auto; font-size: 8pt; }
+  table { border-collapse: collapse; margin: 8px 0; font-size: 9pt; break-inside: auto; }
+  tr { break-inside: avoid; }
+  th, td { border: 1px solid #555; padding: 2px 6px; text-align: center; }
+  th { background: #e8e8e8; }
+  td.izq { text-align: left; }
+  tr.rechazo td { font-weight: bold; }
+  .portada { height: 245mm; display: flex; flex-direction: column; break-after: page; }
+  .encabezado { display: grid; grid-template-columns: 1fr 3fr 1.3fr; border: 1.5px solid #222; }
+  .encabezado > div { padding: 10px; border-right: 1.5px solid #222; display: flex; align-items: center; justify-content: center; text-align: center; }
+  .encabezado > div:last-child { border-right: none; }
+  .titulo { margin-top: 70mm; text-align: center; }
+  .titulo p { text-align: center; font-size: 14pt; margin: 4px 0; }
+  .datos { margin-top: auto; font-size: 12pt; }
+  .datos td { border: none; text-align: left; padding: 4px 8px; font-size: 12pt; }
+  .figura { text-align: center; margin: 10px 0; break-inside: avoid; }
+  .figura img { width: 100%; }
+  .epigrafe { font-size: 9.5pt; font-style: italic; text-align: center; }
+  .salto { break-before: page; }
+  .nota { font-size: 10pt; border-left: 3px solid #888; padding-left: 8px; }
+  ul, ol { margin: 4px 0 6px; }
+  .indice li { margin: 2px 0; }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <div class="encabezado">
+    <div><b>UTN<br>FRT</b></div>
+    <div><div><b><i>UNIVERSIDAD TECNOLÓGICA NACIONAL</i></b><br><i>Facultad Regional Tucumán</i><br>Departamento: SISTEMAS<br>Cátedra: Sintaxis y Semántica de los Lenguajes</div></div>
+    <div><b>TRABAJO PRÁCTICO<br>N° 3</b></div>
+  </div>
+  <div class="titulo">
+    <h1>3. Ejercicio de Aplicación</h1>
+    <p><i>Intérprete de Expresiones Algebraicas</i></p>
+    <p>Transductor de Pila (PDT) y Analizador SLR(1) con capacidad de cómputo</p>
+  </div>
+  <table class="datos">
+    <tr><td>Alumno:</td><td>______________________________________</td></tr>
+    <tr><td>Legajo:</td><td>______________________</td></tr>
+    <tr><td>Comisión:</td><td>______________________</td></tr>
+    <tr><td>Docente:</td><td>Ing. Jorge Buabud</td></tr>
+    <tr><td>Año:</td><td>2026</td></tr>
+    <tr><td>Interfaz web:</td><td class="mono">https://gagaismo.github.io/LaboratorioSSL2/</td></tr>
+  </table>
+</div>
+
+<h2>Índice</h2>
+<ol class="indice">
+  <li>Enunciado</li>
+  <li>Marco teórico: Transductor de Pila y Analizador LR</li>
+  <li>Problema 3.1: PDT para convertir expresiones infijas a posfijas</li>
+  <li>Problema 3.2: Evaluador de expresiones posfijas</li>
+  <li>Interfaz web de evaluación y modelos JFLAP</li>
+  <li>Conclusiones</li>
+  <li>Anexo A: Código fuente de la implementación</li>
+</ol>
+
+<h2>1. Enunciado</h2>
+<p>Podemos decir que una MEF es un AFD al que se le agregó una función de salida. De igual modo se puede definir un
+  Transductor de Pila (Push Down Transducer, PDT) como un APD al que se le agrega una función de salida, definida sobre
+  un alfabeto de salida Σ<sub>S</sub>, con el mismo dominio que la función de transición del APD y rango en Σ<sub>S</sub>*:</p>
+<p style="text-align:center"><b>g : (Q − F) × (Σ<sub>E</sub> ∪ {Δ, λ}) × Σ<sub>P</sub>* → Σ<sub>S</sub>*</b></p>
+<p><b>3.1.</b> Aplicar el concepto de PDT para diseñar un modelo capaz de hacer el análisis sintáctico o reconocimiento de
+  una expresión aritmética de sumas, productos, divisiones y restas, con paréntesis, en notación infija y convertirla a
+  notación posfija. Suponer como operandos identificadores de variables o constantes representados por una letra del alfabeto inglés.</p>
+<p><b>3.2.</b> Implementar un algoritmo que use un modelo similar al APD para evaluar una expresión posfija, dados los
+  valores numéricos de sus identificadores de variable o constante. Cuando lea operandos los introduce en la pila; cuando
+  lea un operador saca los operandos necesarios de la pila, hace la operación y coloca el resultado en la pila, hasta que
+  al terminar de leer la expresión posfija tenga el resultado como único valor en la pila.</p>
+
+<h2>2. Marco teórico</h2>
+<h3>2.1. Transductor de Pila (PDT)</h3>
+<p>Un PDT es un APD al que se le agrega una cinta infinita de salida, donde puede escribir secuencias de un alfabeto de
+  salida Σ<sub>S</sub>. Partiendo del estado inicial con la cinta de salida vacía, en cada paso: (1) LEE (READ) un símbolo
+  de la cinta de entrada; (2) DESCARGA (POP) una secuencia de la pila; (3) de acuerdo al estado actual, al símbolo leído y
+  a la secuencia sacada de la pila, CARGA (PUSH) una secuencia en la pila, ESCRIBE (PRINT) una secuencia en la cinta de
+  salida y transiciona a un ESTADO NUEVO; (4) repite hasta llegar a un estado final de parada y aceptación o a un bloqueo
+  con rechazo. Su definición formal es:</p>
+<p style="text-align:center"><b>PDT = ⟨ Q, Σ<sub>E</sub>, Σ<sub>S</sub>, Σ<sub>P</sub>, q<sub>0</sub>, z<sub>0</sub>, F, f, g ⟩</b></p>
+<p>con f : (Q − F) × (Σ<sub>E</sub> ∪ {Δ, λ}) × Σ<sub>P</sub>* → Q × Σ<sub>P</sub>* y
+  g : (Q − F) × (Σ<sub>E</sub> ∪ {Δ, λ}) × Σ<sub>P</sub>* → Σ<sub>S</sub>*. Por ser determinista, no se permiten
+  transiciones con READ y POP simultáneamente nulos, ni ninguna situación que produzca más de una reacción para un mismo estímulo.</p>
+<h3>2.2. Analizador LR</h3>
+<p>Los analizadores LR(K) son autómatas de pila diseñados a partir de una GIC, con análisis ascendente por derivaciones
+  más a la derecha, que recorren la entrada desde la izquierda y usan preanálisis de K símbolos. El caso más simple,
+  con K = 1, es el SLR(1). Se construye un AF a partir de las reglas de la GIC; sus estados son los <i>símbolos especiales</i>
+  que se cargan en la pila del AP junto con los símbolos gramaticales, y a partir de ese AF se obtiene la Tabla de Análisis LR
+  (en este trabajo, con JFLAP). Las acciones de cómputo se realizan junto con las reducciones.</p>
+
+<h2 class="salto">3. Problema 3.1: PDT para convertir expresiones infijas a posfijas</h2>
+<h3>3.1. Consideraciones de diseño</h3>
+<ul>
+  <li>Se toma como base el PDT analizador-conversor de la cátedra (estados q0 a q6, construido en JFLAP para los operadores
+    + y *) y se lo extiende a los cuatro operadores pedidos: +, −, * y /.</li>
+  <li>Como JFLAP reserva los paréntesis, la expresión se escribe con corchetes <code>[ ]</code>. La interfaz acepta también
+    paréntesis y los reemplaza por corchetes antes del análisis.</li>
+  <li>El fin de la cadena de entrada se representa con el símbolo <code>⌂</code> (Δ en JFLAP) y el símbolo inicial de la pila es <code>Z</code>.</li>
+  <li>Los operandos son letras minúsculas del alfabeto inglés (a..z). En las tablas se agrupan bajo el nombre <code>letra</code>.</li>
+  <li>Precedencia: * y / tienen mayor precedencia que + y −; a igual precedencia se asocia a izquierda.</li>
+  <li>A efectos de la implementación, en lugar del bloqueo del modelo se usa un estado de rechazo tipo sumidero, adonde se dirigen
+    todas las transiciones no definidas. Como q7 y q8 se usan para los nuevos operadores, el sumidero es <b>q9</b>.</li>
+</ul>
+<p>Idea del modelo: los operandos se escriben inmediatamente en la salida; el corchete de apertura se apila; un operador no puede
+  escribirse hasta que haya salido su segundo operando, por eso se apila, pero antes deben salir de la pila (y escribirse) los
+  operadores de igual o mayor precedencia que estén en el tope. El corchete de cierre vacía la pila hasta el corchete de apertura,
+  y el fin de cadena vacía la pila hasta <code>Z</code>.</p>
+<p>Las pilas tienen siempre una forma muy acotada entre dos corchetes: a lo sumo un operador de baja precedencia y, encima, uno de
+  alta. Al leer un operador hay que recordar <i>cuál</i> se leyó mientras se vacía la pila, para apilarlo al final. En el modelo de
+  la cátedra eso lo hacen q1 (se leyó *) y q2 (se leyó +); con cuatro operadores se agregan q7 (se leyó /) y q8 (se leyó −).</p>
+
+<h3>3.2. Definición formal</h3>
+<p style="text-align:center"><b>PDT = ⟨ Q, Σ<sub>E</sub>, Σ<sub>S</sub>, Σ<sub>P</sub>, q<sub>0</sub>, z<sub>0</sub>, F, f, g ⟩</b></p>
+<ul>
+  <li>Q = { q0, q1, q2, q3, q4, q5, q6, q7, q8 }</li>
+  <li>Σ<sub>E</sub> = { a, b, …, z, +, −, *, /, [, ] }</li>
+  <li>Σ<sub>S</sub> = { a, b, …, z, +, −, *, / }</li>
+  <li>Σ<sub>P</sub> = { Z, [, +, −, *, / }</li>
+  <li>q<sub>0</sub> = q0 &nbsp;&nbsp; z<sub>0</sub> = Z &nbsp;&nbsp; F = { q6 }</li>
+  <li>f y g: definidas por el grafo de la figura 1 y la tabla de transición-salida de la sección 3.4.</li>
+</ul>
+<table>
+  <tr><th>Estado</th><th>Función</th><th>READ</th><th>POP</th></tr>
+  <tr><td>q0</td><td class="izq">Inicial. Espera un operando o un corchete de apertura.</td><td>sí</td><td>no</td></tr>
+  <tr><td>q1</td><td class="izq">Se leyó <b>*</b>: saca los operadores * y / del tope y luego apila *.</td><td>no</td><td>sí</td></tr>
+  <tr><td>q2</td><td class="izq">Se leyó <b>+</b>: saca todos los operadores hasta [ o Z y luego apila +.</td><td>no</td><td>sí</td></tr>
+  <tr><td>q3</td><td class="izq">Se leyó un operando. Espera un operador, un corchete de cierre o el fin de cadena.</td><td>sí</td><td>sí</td></tr>
+  <tr><td>q4</td><td class="izq">Se leyó el fin de cadena: vacía la pila hasta Z.</td><td>no</td><td>sí</td></tr>
+  <tr><td>q5</td><td class="izq">Se leyó un corchete de cierre: vacía la pila hasta [.</td><td>no</td><td>sí</td></tr>
+  <tr><td>q6</td><td class="izq">Final de parada y aceptación.</td><td>—</td><td>—</td></tr>
+  <tr><td>q7</td><td class="izq">Se leyó <b>/</b>: saca los operadores * y / del tope y luego apila /.</td><td>no</td><td>sí</td></tr>
+  <tr><td>q8</td><td class="izq">Se leyó <b>−</b>: saca todos los operadores hasta [ o Z y luego apila −.</td><td>no</td><td>sí</td></tr>
+  <tr><td>q9</td><td class="izq">Sumidero de rechazo (solo en la implementación).</td><td>—</td><td>—</td></tr>
+</table>
+
+<h3>3.3. Grafo de transición</h3>
+<p>Para que el grafo sea legible, las transiciones análogas se agrupan con las siguientes variables:
+  <code>o</code> ∈ {+, −, *, /} (cualquier operador), <code>h</code> ∈ {*, /} (alta precedencia),
+  <code>l</code> ∈ {+, −} (baja precedencia) y <code>letra</code> ∈ {a, …, z}. Cada arista tiene la forma
+  <code>READ , POP ; PUSH</code> y la salida se indica con <code>Print</code>, como en JFLAP.</p>
+<div class="figura">
+  <img src="grafo-pdt.svg" alt="Grafo de transición del PDT">
+  <div class="epigrafe">Figura 1. Grafo de transición del PDT analizador-conversor de expresiones infijas a posfijas.</div>
+</div>
+
+<h3 class="salto">3.4. Tabla de transición-salida</h3>
+<p>Cada fila es una transición válida. Los casilleros λ representan la No-operación. Toda combinación de estímulo
+  (estado actual, READ, POP) que no figura en la tabla lleva al sumidero q9 (rechazo).</p>
+<div id="tablaPDT"></div>
+
+<h3 class="salto">3.5. Implementación</h3>
+<p>Se implementaron las dos estrategias propuestas por la cátedra. Ambas usan el mismo algoritmo de análisis y conversión;
+  solo cambia cómo se obtiene la reacción del PDT a partir del estímulo (estado actual, READ, POP). Según el estado se
+  decide si se lee la entrada y si se desapila: en q0 se lee y no se desapila; en q1, q2, q4, q5, q7 y q8 no se lee
+  (λ) y se desapila; en q3 se lee y se desapila.</p>
+<p><b>Primera estrategia: tabla como arreglo bidimensional.</b> La tabla de la sección 3.4 se guarda como una matriz
+  donde cada fila es una transición. El algoritmo busca secuencialmente la fila que corresponde al estímulo; si la búsqueda
+  fracasa, se rechaza la secuencia.</p>
+<pre>Estado=q0
+mientras (estado != q6 and estado != q9)
+  caso estado
+                    q0: leer(símb_entrada)
+                        símb_pila=vacío
+    q1, q2, q4, q5, q7, q8: símb_entrada=vacío
+                        pop(símb_pila)
+                    q3: leer(símb_entrada)
+                        pop(simb_pila)
+  fin caso
+  pos=buscarEnTabla(estado, símb_entrada, simb_pila)
+  si (pos != q9)
+    push(tabla(pos,sec_push))
+    print(tabla(pos,print))
+    estado=tabla(pos,nuevo_estado)
+  sino
+    estado=q9
+  fin si
+fin mientras
+si (estado == q6)
+  entonces rutina_aceptación()
+  sino rutina_rechazo()
+fin si</pre>
+<p><b>Segunda estrategia: tabla como arreglo tridimensional.</b> Los símbolos de entrada y de pila y los estados se convierten
+  en índices numéricos, para acceder directamente a cada elemento de la tabla mediante el estímulo
+  <code>tabla[estado][read][pop]</code>. Cada elemento es un registro con tres campos: ESTADO NUEVO (entero), PUSH (cadena) y
+  PRINT (cadena). Los casilleros no definidos contienen el estado 9 (sumidero). La letra de entrada y el símbolo Z de la pila
+  comparten el índice 1, porque nunca aparecen en el mismo eje.</p>
+<table style="display:inline-table; margin-right:24px; vertical-align:top">
+  <tr><th>Símbolo</th><th>Índice</th></tr>
+  <tr><td>λ</td><td>0</td></tr><tr><td>letra a..z , Z</td><td>1</td></tr><tr><td>+</td><td>2</td></tr>
+  <tr><td>−</td><td>3</td></tr><tr><td>*</td><td>4</td></tr><tr><td>/</td><td>5</td></tr>
+  <tr><td>[</td><td>6</td></tr><tr><td>]</td><td>7</td></tr><tr><td>⌂</td><td>8</td></tr>
+</table>
+<table style="display:inline-table; vertical-align:top">
+  <tr><th>Estado</th><th>Índice</th></tr>
+  <tr><td>q0 … q8</td><td>0 … 8</td></tr><tr><td>q9 (sumidero)</td><td>9</td></tr>
+</table>
+<pre>Estado=0
+mientras (estado != 6 and estado != 9)
+  caso estado
+                 0: leer(símb_entrada)
+                    símb_pila=vacío
+    1, 2, 4, 5, 7, 8: símb_entrada=vacío
+                    pop(símb_pila)
+                 3: leer(símb_entrada)
+                    pop(simb_pila)
+  fin caso
+  push(tabla(estado,símb_entrada,simb_pila).sec_push)
+  print(tabla(estado,símb_entrada,simb_pila).sec_print)
+  estado=tabla(estado,símb_entrada,simb_pila).nuevo_estado
+fin mientras
+si (estado == 6)
+  entonces rutina_aceptación()
+  sino rutina_rechazo()
+fin si</pre>
+<p>La tabla tridimensional se carga a partir de las mismas filas de la sección 3.4, expresadas con índices:</p>
+<div id="tablaIndices" style="columns: 2; column-gap: 16px;"></div>
+<p>La implementación (función <code>convertirInfijaAPosfija</code> del Anexo A) se verificó con 3000 expresiones generadas
+  al azar: ambas estrategias producen exactamente las mismas trazas y la misma expresión posfija que el algoritmo clásico de
+  conversión, y rechazan las cadenas mal formadas (operadores consecutivos, corchetes desbalanceados, operandos contiguos,
+  símbolos fuera del alfabeto, cadena vacía).</p>
+
+<h3 class="salto">3.6. Trazas</h3>
+<p><b>Ejemplo de aceptación.</b> Entrada <code>[a+b]*c-d/e⌂</code>. La pila se muestra con el tope a la izquierda,
+  igual que las secuencias de PUSH.</p>
+<div id="traza1"></div>
+<p>La cadena es aceptada en q6 y la cinta de salida contiene la expresión posfija <b id="posfija1" class="mono"></b>.</p>
+<p><b>Ejemplo de rechazo.</b> Entrada <code>a+*b⌂</code>: después de leer + el PDT queda en q0 esperando un operando, y no
+  hay transición definida para (q0, *, λ), por lo que pasa al sumidero q9.</p>
+<div id="traza2"></div>
+
+<h2 class="salto">4. Problema 3.2: Evaluador de expresiones posfijas</h2>
+<h3>4.1. Gramática Independiente del Contexto</h3>
+<p>El evaluador se basa en un Analizador SLR(1) construido con JFLAP a partir de la GIC de las expresiones posfijas. Se
+  extiende la gramática de la cátedra (S → SS+ | SS* | a) a los cuatro operadores; el terminal <code>a</code> representa
+  cualquier operando:</p>
+<table>
+  <tr><th>Regla</th><th>Producción</th></tr>
+  <tr><td>r1</td><td class="mono">S → SS+</td></tr>
+  <tr><td>r2</td><td class="mono">S → SS−</td></tr>
+  <tr><td>r3</td><td class="mono">S → SS*</td></tr>
+  <tr><td>r4</td><td class="mono">S → SS/</td></tr>
+  <tr><td>r5</td><td class="mono">S → a</td></tr>
+</table>
+<p>Paso 1) Gramática ampliada: se agrega la regla <code>S' → S</code>. &nbsp; Σ<sub>T</sub> = { a, +, −, *, / } &nbsp; Σ<sub>N</sub> = { S', S }.</p>
+<h3>4.2. Conjuntos PRIMERO y SIGUIENTE</h3>
+<p>Paso 2)</p>
+<table>
+  <tr><th></th><th>PRIMERO</th><th>SIGUIENTE</th></tr>
+  <tr><td>S</td><td class="mono">{ a }</td><td class="mono">{ *, +, −, /, a, $ }</td></tr>
+</table>
+<p>SIGUIENTE(S) contiene <code>$</code> por S' → S; contiene los cuatro operadores porque S aparece antes del operador en
+  S → SS<i>op</i>; y contiene <code>a</code> porque el primer S de SS<i>op</i> está seguido por otro S, cuyo PRIMERO es { a }.</p>
+<h3>4.3. Autómata finito de elementos LR(0)</h3>
+<p>Paso 3) Estados del AF (símbolos especiales) con sus elementos y transiciones:</p>
+<table>
+  <tr><th>Estado</th><th>Elementos</th><th>Transiciones</th></tr>
+  <tr><td>0</td><td class="izq mono">S' → ·S<br>S → ·SS+ | ·SS− | ·SS* | ·SS/<br>S → ·a</td><td class="izq mono">S → 1<br>a → 2</td></tr>
+  <tr><td>1</td><td class="izq mono">S' → S·<br>S → S·S+ | S·S− | S·S* | S·S/<br>S → ·SS+ | ·SS− | ·SS* | ·SS/<br>S → ·a</td><td class="izq mono">S → 3<br>a → 2</td></tr>
+  <tr><td>2</td><td class="izq mono">S → a·</td><td class="izq">—</td></tr>
+  <tr><td>3</td><td class="izq mono">S → SS·+ | SS·− | SS·* | SS·/<br>S → S·S+ | S·S− | S·S* | S·S/<br>S → ·SS+ | ·SS− | ·SS* | ·SS/<br>S → ·a</td><td class="izq mono">* → 4 &nbsp; + → 5<br>− → 6 &nbsp; / → 7<br>S → 3 &nbsp; a → 2</td></tr>
+  <tr><td>4</td><td class="izq mono">S → SS*·</td><td class="izq">—</td></tr>
+  <tr><td>5</td><td class="izq mono">S → SS+·</td><td class="izq">—</td></tr>
+  <tr><td>6</td><td class="izq mono">S → SS−·</td><td class="izq">—</td></tr>
+  <tr><td>7</td><td class="izq mono">S → SS/·</td><td class="izq">—</td></tr>
+</table>
+<h3>4.4. Tabla de análisis SLR(1)</h3>
+<p>Paso 4) La tabla se representa con un arreglo bidimensional: el primer índice es el símbolo especial (estado del AF) y el
+  segundo los símbolos terminales, el no terminal S y el símbolo $ de fin de cadena. <code>s<i>k</i></code> indica desplazar
+  e ir al estado k; <code>r<i>j</i></code>, reducir por la regla j; <code>acc</code>, aceptar; el casillero vacío, error.
+  La tabla no tiene conflictos, por lo que la gramática es SLR(1).</p>
+<div id="tablaLR"></div>
+
+<h3>4.5. Estructuras de datos</h3>
+<p>Se utilizan dos pilas:</p>
+<ol>
+  <li><b>Pila de análisis:</b> la del AP que realiza el análisis sintáctico; guarda los símbolos especiales alternados con los símbolos gramaticales.</li>
+  <li><b>Pila de cálculo:</b> guarda los valores numéricos, tal como indica el enunciado.</li>
+</ol>
+<p>Y dos arreglos unidimensionales, construidos a partir de la expresión posfija:</p>
+<ol>
+  <li>Uno de tipo carácter, con la expresión posfija simbólica: cada operando se reemplaza por <code>a</code>, se eliminan los
+    espacios en blanco y se agrega <code>$</code> al final. Es la entrada del AP.</li>
+  <li>Otro numérico, con los valores de los operandos en el orden en que aparecen. Sirve para reemplazar cada <code>a</code> por su valor
+    al momento del cálculo.</li>
+</ol>
+<p>Los operandos pueden darse como identificadores (letras, cuyo valor se ingresa por separado, como pide el enunciado) o
+  directamente como números separados por espacios, como en las pautas de la cátedra (por ejemplo <code>10 4 + 2 3 * +</code>).</p>
+
+<h3>4.6. Algoritmo</h3>
+<pre>CargarTabla()
+Simb_especial = 0
+insertar(Simb_especial)
+leer(simbolo)
+valor_tabla = tabla[Simb_especial, simbolo]
+mientras (valor_tabla != aceptar)
+  caso (valor_tabla sea)
+    desplazamiento:
+      insertar(simbolo)
+      Simb_especial = valor_tabla.estado
+      insertar(Simb_especial)
+      leer(simbolo)
+    reducción:
+      extraer(lado_derecho_de_valor_tabla.ReglaReescritura)
+      Simb_especial = elemento_cima_de_la_pila_sin_extraer
+      insertar(lado_izquierdo_de_valor_tabla.ReglaReescritura)
+      Simb_especial = tabla[Simb_especial, lado_izquierdo_de_valor_tabla.ReglaReescritura]
+      insertar(Simb_especial)
+      operar_en_pila_de_calculo(lado_derecho_de_valor_tabla.ReglaReescritura)
+    vacío:
+      salir a la rutina_de_error()
+  fin_caso
+  valor_tabla = tabla[Simb_especial, simbolo]
+fin_mientras
+si (simbolo no es $)
+  salir a la rutina_de_error()
+fin_si
+vaciar_pila()
+mostrar_resultado()</pre>
+<p>Al reducir se extraen de la pila de análisis 2·|lado derecho| elementos (cada símbolo gramatical con su símbolo especial).
+  La acción <code>operar_en_pila_de_calculo</code> es la que realiza el cómputo, junto con la reducción:</p>
+<ul>
+  <li><b>r5 (S → a):</b> se toma el siguiente valor del arreglo numérico y se inserta en la pila de cálculo.</li>
+  <li><b>r1 a r4 (S → SS<i>op</i>):</b> se extrae val2 y luego val1 de la pila de cálculo, se calcula val1 <i>op</i> val2 y
+    se inserta el resultado. Si el operador es / y val2 es 0, se informa división por cero.</li>
+</ul>
+<p>Al aceptar, el único valor que queda en la pila de cálculo es el resultado de la expresión.</p>
+
+<h3 class="salto">4.7. Traza</h3>
+<p>Se evalúa la expresión posfija obtenida en el problema 3.1, <code>ab+c*de/-</code>, con los valores
+  a = 2, b = 3, c = 4, d = 10, e = 5. Arreglo simbólico: <code>a a + a * a a / − $</code>; arreglo numérico: <code>2 3 4 10 5</code>.
+  Equivale a [2+3]*4 − 10/5 = 18. Cada fila muestra la configuración (pilas y entrada restante) antes de aplicar la acción indicada.</p>
+<div id="traza3"></div>
+<p>Resultado: <b id="resultado3"></b>.</p>
+
+<h2>5. Interfaz web de evaluación y modelos JFLAP</h2>
+<p>Los dos problemas pueden evaluarse en la página <span class="mono">https://gagaismo.github.io/LaboratorioSSL2/</span>, que
+  ejecuta en el navegador la misma implementación del Anexo A:</p>
+<ul>
+  <li><b>Problema 3.1:</b> se ingresa una expresión infija, se elige la estrategia (arreglo bidimensional o tridimensional) y se
+    muestra si es aceptada o rechazada, la expresión posfija y la traza completa del PDT. También se puede consultar la tabla de transición-salida.</li>
+  <li><b>Problema 3.2:</b> se ingresa una expresión posfija (o se trae la obtenida en 3.1), se cargan los valores de sus identificadores
+    y se muestra el resultado con la traza de la pila de análisis y la pila de cálculo. También se puede consultar la tabla SLR(1).</li>
+</ul>
+<p>En la carpeta <span class="mono">modelos/</span> de la página se incluyen los archivos de JFLAP:
+  <span class="mono">PDT-Analizador-Conversor-ExpAlg-4op.jff</span> (el PDT modelado como autómata de pila con notas
+  <i>Print</i>, con los operandos a, b y c como en el modelo de la cátedra) y <span class="mono">GICinterpretePosfijo-4op.jff</span>
+  (la GIC, a partir de la cual JFLAP genera la tabla SLR(1) de la sección 4.4).</p>
+
+<h2>6. Conclusiones</h2>
+<p>Con un PDT determinista de nueve estados se resuelve el reconocimiento de expresiones infijas con los cuatro operadores y
+  corchetes, junto con su traducción a notación posfija, respetando la precedencia y la asociatividad a izquierda. La extensión del
+  modelo de la cátedra solo requirió agregar un estado de vaciado por cada nuevo operador, porque el PDT debe recordar qué operador
+  leyó mientras saca de la pila los de igual o mayor precedencia. Las dos estrategias de implementación dan los mismos resultados;
+  la tridimensional accede directamente a la reacción, sin búsqueda secuencial.</p>
+<p>El evaluador del problema 3.2 muestra un analizador SLR(1) con capacidad de cómputo: la pila de análisis valida la sintaxis de la
+  expresión posfija y las acciones semánticas asociadas a las reducciones operan sobre una segunda pila, de modo que al aceptar la
+  cadena el resultado queda como único valor en la pila de cálculo.</p>
+
+<h2 class="salto">Anexo A: Código fuente de la implementación</h2>
+<p>Archivo <span class="mono">tp3.js</span> (JavaScript). Contiene ambas estrategias del problema 3.1 y el evaluador del problema 3.2.</p>
+<pre class="codigo" id="codigo">Cargando…</pre>
+
+<script src="tp3.js"></script>
+<script src="vistas.js"></script>
+<script>
+  document.getElementById('tablaPDT').innerHTML = Vistas.tablaPDT();
+  document.getElementById('tablaIndices').innerHTML = Vistas.tablaPDTIndices();
+  document.getElementById('tablaLR').innerHTML = Vistas.tablaLR();
+  var r1 = TP3.convertirInfijaAPosfija('[a+b]*c-d/e', 1);
+  document.getElementById('traza1').innerHTML = Vistas.trazaPDT(r1.traza);
+  document.getElementById('posfija1').textContent = r1.posfija;
+  document.getElementById('traza2').innerHTML = Vistas.trazaPDT(TP3.convertirInfijaAPosfija('a+*b', 1).traza);
+  var r3 = TP3.evaluarPosfija('ab+c*de/-', { a: 2, b: 3, c: 4, d: 10, e: 5 });
+  document.getElementById('traza3').innerHTML = Vistas.trazaLR(r3.traza);
+  document.getElementById('resultado3').textContent = TP3.formatear(r3.resultado);
+  fetch('tp3.js').then(function (r) { return r.text(); }).then(function (t) {
+    document.getElementById('codigo').textContent = t;
+  }).catch(function () {
+    document.getElementById('codigo').textContent = 'Ver tp3.js en la página del trabajo.';
+  });
+</script>
+</body>
+</html>
