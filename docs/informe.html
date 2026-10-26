@@ -349,14 +349,24 @@ mostrar_resultado()</pre>
 <p>Resultado: <b id="resultado3"></b>.</p>
 
 <h2>5. Interfaz web de evaluación y modelos JFLAP</h2>
-<p>Los dos problemas pueden evaluarse en la página <span class="mono">https://gagaismo.github.io/LaboratorioSSL2/</span>, que
-  ejecuta en el navegador la misma implementación del Anexo A:</p>
+<p>Los dos problemas pueden evaluarse en dos interfaces publicadas con GitHub Pages, que ejecutan en el navegador la misma
+  implementación del Anexo A:</p>
+<p><b>Interfaz gráfica</b> (<span class="mono">https://gagaismo.github.io/LaboratorioSSL2/</span>). Muestra la definición formal
+  del PDT y la gramática con notación matemática (KaTeX), y:</p>
 <ul>
   <li><b>Problema 3.1:</b> se ingresa una expresión infija, se elige la estrategia (arreglo bidimensional o tridimensional) y se
-    muestra si es aceptada o rechazada, la expresión posfija y la traza completa del PDT. También se puede consultar la tabla de transición-salida.</li>
+    muestra si es aceptada o rechazada, la expresión reconocida en notación matemática, la expresión posfija y la traza completa del PDT.
+    También se puede consultar la tabla de transición-salida.</li>
   <li><b>Problema 3.2:</b> se ingresa una expresión posfija (o se trae la obtenida en 3.1), se cargan los valores de sus identificadores
-    y se muestra el resultado con la traza de la pila de análisis y la pila de cálculo. También se puede consultar la tabla SLR(1).</li>
+    y se muestra el resultado, con la expresión y los valores sustituidos, junto con la traza de la pila de análisis y la pila de cálculo.
+    También se puede consultar la tabla SLR(1).</li>
 </ul>
+<p><b>Interfaz de consola</b> (<span class="mono">https://gagaismo.github.io/LaboratorioSSL2/consola.html</span>). Una terminal con
+  estilo TUI que acepta comandos: <span class="mono">infija &lt;expr&gt;</span> (problema 3.1),
+  <span class="mono">posfija [&lt;expr&gt;] [x=v …]</span> (problema 3.2; sin expresión evalúa la última obtenida en 3.1),
+  <span class="mono">valores</span>, <span class="mono">estrategia 1|2</span>, <span class="mono">traza on|off</span>,
+  <span class="mono">tabla pdt|lr</span>, <span class="mono">ejemplo</span> y <span class="mono">ayuda</span>. Las trazas y las
+  tablas se dibujan con caracteres de recuadro, y tiene historial de comandos y atajos de teclado (F1 a F4).</p>
 <p>En la carpeta <span class="mono">modelos/</span> de la página se incluyen los archivos de JFLAP:
   <span class="mono">PDT-Analizador-Conversor-ExpAlg-4op.jff</span> (el PDT modelado como autómata de pila con notas
   <i>Print</i>, con los operandos a, b y c como en el modelo de la cátedra) y <span class="mono">GICinterpretePosfijo-4op.jff</span>

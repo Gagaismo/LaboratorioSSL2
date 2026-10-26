@@ -61,5 +61,40 @@ var Vistas = (function () {
     return h + '</table>';
   }
 
-  return { tablaPDT: tablaPDT, tablaPDTIndices: tablaPDTIndices, trazaPDT: trazaPDT, tablaLR: tablaLR, trazaLR: trazaLR };
+  // Arma la expresión en LaTeX a partir de la posfija (el árbol que reconoció el modelo).
+  // Si se dan valores, reemplaza cada identificador por su valor.
+  function latexDesdePosfija(posfija, valores) {
+    var pila = [];
+    var tokens = posfija.trim().split(/\s+/).filter(Boolean);
+    var simbolos = [];
+    tokens.forEach(function (tok) {
+      if (/^\d+(\.\d+)?$/.test(tok)) simbolos.push(tok);
+      else tok.split('').forEach(function (c) { simbolos.push(c); });
+    });
+    var baja = { '+': 1, '-': 1 };
+    function entre(n) { return '\\left(' + n.tex + '\\right)'; }
+    for (var i = 0; i < simbolos.length; i++) {
+      var s = simbolos[i];
+      if ('+-*/'.indexOf(s) < 0) {
+        var v = valores && valores[s] !== undefined && valores[s] !== '' ? String(valores[s]) : s;
+        pila.push({ tex: v, op: null });
+        continue;
+      }
+      if (pila.length < 2) return null;
+      var der = pila.pop(), izq = pila.pop();
+      var tex;
+      if (s === '/') {
+        tex = '\\dfrac{' + izq.tex + '}{' + der.tex + '}';
+      } else if (s === '*') {
+        tex = (baja[izq.op] ? entre(izq) : izq.tex) + ' \\cdot ' + (baja[der.op] || der.op === '*' ? entre(der) : der.tex);
+      } else {
+        tex = izq.tex + (s === '+' ? ' + ' : ' - ') + (baja[der.op] ? entre(der) : der.tex);
+      }
+      pila.push({ tex: tex, op: s });
+    }
+    return pila.length === 1 ? pila[0].tex : null;
+  }
+
+  return { tablaPDT: tablaPDT, tablaPDTIndices: tablaPDTIndices, trazaPDT: trazaPDT, tablaLR: tablaLR, trazaLR: trazaLR,
+    latexDesdePosfija: latexDesdePosfija };
 })();

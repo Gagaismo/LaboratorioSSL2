@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Intérprete de Expresiones</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
@@ -14,6 +16,7 @@
     <nav>
       <a href="#p31">3.1 PDT infija → posfija</a>
       <a href="#p32">3.2 Evaluador SLR(1)</a>
+      <a href="consola.html">Consola (TUI)</a>
       <a href="informe.pdf">Informe (PDF)</a>
       <a href="informe.html">Informe (HTML)</a>
       <a href="modelos/PDT-Analizador-Conversor-ExpAlg-4op.jff">PDT (JFLAP)</a>
@@ -28,6 +31,14 @@
     <p class="consigna">Analiza una expresión infija con +, −, *, / y corchetes, cuyos operandos son letras minúsculas,
       y la convierte a notación posfija. Como en JFLAP, los paréntesis se escriben con corchetes
       (también se aceptan paréntesis, que se reemplazan por corchetes). El fin de cadena ⌂ se agrega automáticamente.</p>
+    <div class="modelo">
+      <div data-tex="\mathrm{PDT} = \langle Q,\ \Sigma_E,\ \Sigma_S,\ \Sigma_P,\ q_0,\ z_0,\ F,\ f,\ g \rangle"></div>
+      <div data-tex="Q = \{q_0, \dots, q_8\} \qquad F = \{q_6\} \qquad z_0 = Z \qquad \text{sumidero: } q_9"></div>
+      <div data-tex="\Sigma_E = \{a, \dots, z,\ +,\ -,\ *,\ /,\ [\,,\ ]\} \qquad \Sigma_S = \{a, \dots, z,\ +,\ -,\ *,\ /\}"></div>
+      <div data-tex="\Sigma_P = \{Z,\ [\,,\ +,\ -,\ *,\ /\}"></div>
+      <div data-tex="f : (Q - F) \times (\Sigma_E \cup \{\Delta, \lambda\}) \times \Sigma_P^{*} \to Q \times \Sigma_P^{*}"></div>
+      <div data-tex="g : (Q - F) \times (\Sigma_E \cup \{\Delta, \lambda\}) \times \Sigma_P^{*} \to \Sigma_S^{*}"></div>
+    </div>
     <div class="fila">
       <div>
         <label for="infija">Expresión infija</label>
@@ -65,6 +76,11 @@
     <h2>Problema 3.2 · Evaluador de expresiones posfijas</h2>
     <p class="consigna">Analizador SLR(1) de la GIC S → SS+ | SS− | SS* | SS/ | a, con una pila de análisis y una pila de cálculo.
       Los operandos pueden ser letras (se piden sus valores) o números separados por blancos, por ejemplo <code>10 4 + 2 3 * +</code>.</p>
+    <div class="modelo">
+      <div data-tex="r_1: S \to SS+ \qquad r_2: S \to SS- \qquad r_3: S \to SS* \qquad r_4: S \to SS/ \qquad r_5: S \to a"></div>
+      <div data-tex="S' \to S \qquad \mathrm{PRIMERO}(S) = \{a\} \qquad \mathrm{SIGUIENTE}(S) = \{*,\ +,\ -,\ /,\ a,\ \$\}"></div>
+      <div data-tex="r_5:\ \mathrm{push}(\mathit{valor}) \qquad r_{1..4}:\ \mathit{val}_2 = \mathrm{pop}(),\ \mathit{val}_1 = \mathrm{pop}(),\ \mathrm{push}(\mathit{val}_1\ \mathit{op}\ \mathit{val}_2)"></div>
+    </div>
     <div class="fila">
       <div>
         <label for="posfija">Expresión posfija</label>
@@ -92,11 +108,22 @@
   var $ = function (id) { return document.getElementById(id); };
   var valoresPrevios = { a: 2, b: 3, c: 4, d: 10, e: 5 };
 
+  // Notación matemática con KaTeX; si la librería no cargó, se muestra el texto plano.
+  function tex(fuente, bloque) {
+    if (window.katex) return katex.renderToString(fuente, { throwOnError: false, displayMode: !!bloque });
+    return '<code>' + fuente.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</code>';
+  }
+  function texPosfija(posfija) {
+    return tex(posfija.split('').join('\\;'));
+  }
+  document.querySelectorAll('[data-tex]').forEach(function (el) { el.innerHTML = tex(el.dataset.tex, true); });
+
   function convertir() {
     var expr = $('infija').value.replace(/\(/g, '[').replace(/\)/g, ']');
     var r = TP3.convertirInfijaAPosfija(expr, parseInt($('estrategia').value, 10));
     $('res31').innerHTML = r.aceptada
-      ? '<div class="resultado ok">Cadena aceptada (q6). Expresión posfija: <code>' + r.posfija + '</code> ' +
+      ? '<div class="resultado ok">Cadena aceptada (q6). Expresión reconocida:' + tex(Vistas.latexDesdePosfija(r.posfija), true) +
+        'Expresión posfija: ' + texPosfija(r.posfija) + ' &nbsp; ' +
         '<button class="secundario" id="pasar">Evaluar en 3.2 →</button></div>'
       : '<div class="resultado error">Cadena rechazada: el PDT llegó al estado sumidero q9 (transición no definida).</div>';
     $('traza31').innerHTML = Vistas.trazaPDT(r.traza);
@@ -129,7 +156,8 @@
     document.querySelectorAll('#valores input').forEach(function (inp) { valores[inp.dataset.letra] = inp.value; });
     var r = TP3.evaluarPosfija($('posfija').value, valores);
     $('res32').innerHTML = r.aceptada
-      ? '<div class="resultado ok">Expresión aceptada. Resultado (único valor en la pila de cálculo): <code>' + TP3.formatear(r.resultado) + '</code></div>'
+      ? '<div class="resultado ok">Expresión aceptada. Resultado (único valor en la pila de cálculo):' +
+        tex(Vistas.latexDesdePosfija($('posfija').value, valores) + ' = ' + TP3.formatear(r.resultado), true) + '</div>'
       : '<div class="resultado error">' + r.error + '</div>';
     $('traza32').innerHTML = Vistas.trazaLR(r.traza);
   }

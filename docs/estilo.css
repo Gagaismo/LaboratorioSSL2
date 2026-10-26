@@ -55,6 +55,16 @@ section.panel {
 }
 h2 { margin: 0 0 4px; font-size: 20px; }
 .consigna { color: var(--suave); font-size: 14px; margin: 0 0 16px; }
+.modelo {
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 4px 12px;
+  margin-bottom: 16px;
+}
+.modelo .katex-display { margin: 8px 0; overflow-x: auto; overflow-y: hidden; }
+.resultado .katex { font-size: 1.15em; }
+.resultado .katex-display { margin: 8px 0 2px; overflow-x: auto; overflow-y: hidden; }
 label { font-weight: 600; font-size: 14px; display: block; margin-bottom: 4px; }
 .fila { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
 .fila > div { flex: 1 1 260px; }
