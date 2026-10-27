@@ -6,7 +6,7 @@
 <title>Intérprete de Expresiones</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="estilo.css?v=4">
 </head>
 <body>
 <header>
@@ -62,6 +62,15 @@
       <button class="secundario" data-infija="[a+b">[a+b (error)</button>
     </div>
     <div id="res31"></div>
+    <details open>
+      <summary>Grafo del PDT (JFLAP) · recorrido paso a paso</summary>
+      <div class="simulador">
+        <div class="controles" id="ctl31"></div>
+        <div class="descripcion mono" id="desc31"></div>
+        <div class="lienzo" id="grafo31"></div>
+        <div class="cintas" id="cintas31"></div>
+      </div>
+    </details>
     <details id="traza31-det" open>
       <summary>Traza del PDT</summary>
       <div class="tabla-scroll" id="traza31"></div>
@@ -91,6 +100,19 @@
     <div class="valores" id="valores"></div>
     <div id="res32"></div>
     <details open>
+      <summary>Árbol de análisis sintáctico (distinto para cada expresión)</summary>
+      <div class="lienzo arbol-lienzo" id="arbol32"></div>
+    </details>
+    <details open>
+      <summary>AF de elementos LR(0) (JFLAP) · recorrido paso a paso</summary>
+      <div class="simulador">
+        <div class="controles" id="ctl32"></div>
+        <div class="descripcion mono" id="desc32"></div>
+        <div class="lienzo" id="grafo32"></div>
+        <div class="cintas" id="cintas32"></div>
+      </div>
+    </details>
+    <details open>
       <summary>Traza del analizador (pila de análisis y pila de cálculo)</summary>
       <div class="tabla-scroll" id="traza32"></div>
     </details>
@@ -102,8 +124,9 @@
 </main>
 <footer>Trabajo Práctico N° 3 · Sintaxis y Semántica de los Lenguajes · UTN Facultad Regional Tucumán</footer>
 
-<script src="tp3.js"></script>
-<script src="vistas.js"></script>
+<script src="tp3.js?v=4"></script>
+<script src="vistas.js?v=4"></script>
+<script src="grafos.js?v=4"></script>
 <script>
   var $ = function (id) { return document.getElementById(id); };
   var valoresPrevios = { a: 2, b: 3, c: 4, d: 10, e: 5 };
@@ -118,6 +141,99 @@
   }
   document.querySelectorAll('[data-tex]').forEach(function (el) { el.innerHTML = tex(el.dataset.tex, true); });
 
+  // Controles de reproducción paso a paso para un grafo.
+  function Simulador(idControles, alCambiar) {
+    var raiz = $(idControles), min = 0, max = 0, k = 0, reloj = null;
+    raiz.innerHTML =
+      '<button class="secundario" data-a="inicio" title="Inicio">⏮</button>' +
+      '<button class="secundario" data-a="atras" title="Paso anterior">◀</button>' +
+      '<button class="secundario" data-a="play" title="Reproducir">▶ Reproducir</button>' +
+      '<button class="secundario" data-a="adelante" title="Paso siguiente">▶</button>' +
+      '<button class="secundario" data-a="fin" title="Fin">⏭</button>' +
+      '<input type="range" aria-label="Paso">' +
+      '<span class="contador"></span>';
+    var rango = raiz.querySelector('input'), contador = raiz.querySelector('.contador'), play = raiz.querySelector('[data-a=play]');
+    function ir(nuevo) {
+      k = Math.max(min, Math.min(max, nuevo));
+      rango.value = k;
+      contador.textContent = 'paso ' + k + ' de ' + max;
+      if (k === max) detener();
+      alCambiar(k);
+    }
+    function detener() { clearInterval(reloj); reloj = null; play.textContent = '▶ Reproducir'; }
+    raiz.addEventListener('click', function (e) {
+      var a = e.target.dataset && e.target.dataset.a;
+      if (a === 'inicio') ir(min);
+      else if (a === 'atras') ir(k - 1);
+      else if (a === 'adelante') ir(k + 1);
+      else if (a === 'fin') ir(max);
+      else if (a === 'play') {
+        if (reloj) return detener();
+        if (k === max) ir(min);
+        play.textContent = '⏸ Pausa';
+        reloj = setInterval(function () { ir(k + 1); }, 800);
+      }
+    });
+    rango.addEventListener('input', function () { detener(); ir(parseInt(rango.value, 10)); });
+    return {
+      cargar: function (desde, hasta, inicial) {
+        detener(); min = desde; max = hasta; rango.min = desde; rango.max = hasta; ir(inicial);
+      },
+      ir: function (n) { detener(); ir(n); }
+    };
+  }
+
+  function celdas(texto, cabezal) {
+    return '<span class="cinta">' + (texto.length ? texto.split('').map(function (c, i) {
+      var clase = cabezal === undefined ? '' : (i < cabezal ? ' leida' : (i === cabezal ? ' cabezal' : ''));
+      return '<span class="celda' + clase + '">' + c + '</span>';
+    }).join('') : '<span class="celda vacia">λ</span>') + '</span>';
+  }
+  function marcarFila(idTabla, k) {
+    $(idTabla).querySelectorAll('tr').forEach(function (tr, i) { tr.classList.toggle('seleccionada', i === k); });
+  }
+  function filasClicables(idTabla, sim) {
+    $(idTabla).querySelectorAll('tr').forEach(function (tr, i) {
+      if (i > 0) tr.onclick = function () { sim.ir(i); };
+    });
+  }
+
+  $('grafo31').innerHTML = Grafos.dibujarPDT();
+  $('grafo32').innerHTML = Grafos.dibujarLR();
+  var corrida31 = null, corrida32 = null;
+
+  var sim31 = Simulador('ctl31', function (k) {
+    if (!corrida31) return;
+    var t = corrida31.traza, svg = $('grafo31').querySelector('svg');
+    Grafos.resaltarPDT(svg, t, k);
+    var lecturas = 0;
+    for (var i = 0; i < k; i++) if (t[i].read !== '') lecturas++;
+    var p = k > 0 ? t[k - 1] : null;
+    var l = function (s) { return s === '' ? 'λ' : s; };
+    $('desc31').textContent = !p
+      ? 'Configuración inicial: estado q0, pila Z, cinta de salida vacía.'
+      : 'Paso ' + k + ': (q' + p.estado + ', ' + l(p.read) + ', ' + l(p.pop) + ') → ' +
+        (p.nuevo === 9 ? 'sin transición definida: sumidero q9 (rechazo)'
+          : '(q' + p.nuevo + ', PUSH ' + l(p.push) + ', PRINT ' + l(p.print) + ')' + (p.nuevo === 6 ? ' · aceptación' : ''));
+    $('cintas31').innerHTML =
+      '<div><b>Entrada</b> ' + celdas(corrida31.cinta, lecturas) + '</div>' +
+      '<div><b>Pila</b> <span class="tenue">(tope a la izq.)</span> ' + celdas(p ? p.pila : 'Z') + '</div>' +
+      '<div><b>Salida</b> ' + celdas(p ? p.salida : '') + '</div>';
+    marcarFila('traza31', k);
+  });
+
+  var sim32 = Simulador('ctl32', function (k) {
+    if (!corrida32 || !corrida32.traza.length) return;
+    var p = corrida32.traza[k - 1];
+    Grafos.resaltarLR($('grafo32').querySelector('svg'), corrida32.traza, k);
+    $('desc32').textContent = 'Paso ' + k + ': ' + p.accion;
+    $('cintas32').innerHTML =
+      '<div><b>Pila de análisis</b> ' + celdas(p.analisis.replace(/ /g, '')) + '</div>' +
+      '<div><b>Entrada</b> ' + celdas(p.entrada) + '</div>' +
+      '<div><b>Pila de cálculo</b> <span class="mono">' + (p.calculo || 'vacía') + '</span></div>';
+    marcarFila('traza32', k);
+  });
+
   function convertir() {
     var expr = $('infija').value.replace(/\(/g, '[').replace(/\)/g, ']');
     var r = TP3.convertirInfijaAPosfija(expr, parseInt($('estrategia').value, 10));
@@ -127,6 +243,9 @@
         '<button class="secundario" id="pasar">Evaluar en 3.2 →</button></div>'
       : '<div class="resultado error">Cadena rechazada: el PDT llegó al estado sumidero q9 (transición no definida).</div>';
     $('traza31').innerHTML = Vistas.trazaPDT(r.traza);
+    corrida31 = { traza: r.traza, cinta: expr.replace(/\s+/g, '') + TP3.FIN };
+    filasClicables('traza31', sim31);
+    sim31.cargar(0, r.traza.length, 0);
     if (r.aceptada) $('pasar').onclick = function () {
       $('posfija').value = r.posfija;
       actualizarValores();
@@ -160,6 +279,14 @@
         tex(Vistas.latexDesdePosfija($('posfija').value, valores) + ' = ' + TP3.formatear(r.resultado), true) + '</div>'
       : '<div class="resultado error">' + r.error + '</div>';
     $('traza32').innerHTML = Vistas.trazaLR(r.traza);
+    var arbol = Grafos.arbolLR(r.traza, $('posfija').value);
+    $('arbol32').innerHTML = arbol
+      ? (r.aceptada ? '' : '<p class="tenue">El análisis se interrumpió: se muestran los subárboles reconocidos hasta el error.</p>') + arbol
+      : '<p class="tenue">No se llegó a reducir ningún símbolo.</p>';
+    corrida32 = { traza: r.traza };
+    filasClicables('traza32', sim32);
+    if (r.traza.length) sim32.cargar(1, r.traza.length, 1);
+    else { $('desc32').textContent = r.error; $('cintas32').innerHTML = ''; }
   }
 
   $('convertir').onclick = convertir;

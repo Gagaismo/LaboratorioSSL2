@@ -106,4 +106,72 @@ td.izq { text-align: left; }
 tr.rechazo td { color: var(--error); font-weight: 600; }
 details { margin-top: 12px; }
 summary { cursor: pointer; color: var(--acento); font-weight: 600; font-size: 15px; }
+.tenue { color: var(--suave); font-size: 14px; }
+.mono { font-family: var(--mono); }
+
+/* Simulador y grafos estilo JFLAP: el lienzo es siempre claro, como en JFLAP */
+.simulador { margin-top: 8px; }
+.controles { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+.controles button { padding: 4px 10px; font-size: 14px; }
+.controles input[type=range] { flex: 1 1 160px; min-width: 120px; }
+.controles .contador { font-size: 14px; color: var(--suave); min-width: 90px; }
+.descripcion { font-size: 14px; margin-bottom: 8px; min-height: 1.5em; }
+.lienzo {
+  background: #ffffff;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 6px;
+  overflow-x: auto;
+}
+.lienzo svg.grafo { display: block; width: 100%; min-width: 560px; height: auto; }
+.grafo .arista { fill: none; stroke: #333; stroke-width: 1.3; transition: stroke .2s, stroke-width .2s; }
+.grafo marker path { fill: #333; }
+.grafo .nodo circle { fill: #fff6b0; stroke: #333; stroke-width: 1.4; transition: fill .2s; }
+.grafo .nodo text { font: 15px "Segoe UI", Arial, sans-serif; fill: #111; }
+.grafo .etiqueta text, .grafo .items text {
+  font: 12.5px Consolas, "Courier New", monospace;
+  fill: #111;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.grafo .items text { font-size: 11.5px; fill: #444; }
+.grafo .print { fill: #7a5b00; font-weight: bold; }
+.grafo .arista.recorrido { stroke: #1f5fa8; stroke-width: 2.4; }
+.grafo .arista.actual { stroke: #d62728; stroke-width: 3.2; }
+.grafo .etiqueta.actual text { fill: #d62728; font-weight: bold; }
+.grafo .etiqueta.recorrido text { fill: #1f5fa8; }
+.grafo .nodo.en-pila circle { stroke: #1f5fa8; stroke-width: 3; }
+.grafo .nodo.actual circle { fill: #ffa94d; stroke: #d62728; stroke-width: 3; }
+.grafo .nodo.rechazo circle { fill: #ff8a80; stroke: #b42318; stroke-width: 3; }
+
+.cintas { display: grid; gap: 6px; margin-top: 10px; font-size: 14px; }
+.cinta { display: inline-flex; flex-wrap: wrap; gap: 2px; vertical-align: middle; margin-left: 6px; }
+.celda {
+  min-width: 26px;
+  padding: 2px 4px;
+  text-align: center;
+  font-family: var(--mono);
+  border: 1px solid var(--borde);
+  border-radius: 3px;
+  background: var(--fondo);
+}
+.celda.leida { opacity: .4; }
+.celda.cabezal { border-color: #d62728; box-shadow: 0 0 0 2px #d62728 inset; font-weight: 700; }
+.celda.vacia { color: var(--suave); }
+tr.seleccionada td { background: var(--acento-claro); font-weight: 700; }
+#traza31 tr, #traza32 tr { cursor: pointer; }
+
+/* Árbol de análisis sintáctico */
+.arbol-lienzo { text-align: center; }
+svg.arbol { width: 100%; height: auto; }
+.arbol .ramas line { stroke: #555; stroke-width: 1.3; }
+.arbol circle { stroke: #333; stroke-width: 1.2; }
+.arbol .no-terminal circle { fill: #8fd19e; }
+.arbol .hoja circle { fill: #fff6b0; }
+.arbol .hoja.operador circle { fill: #ffe0a3; }
+.arbol text { font: 14px "Segoe UI", Arial, sans-serif; fill: #111; }
+.arbol text.valor { font: bold 12px Consolas, monospace; fill: #1f5fa8; }
+
 footer { text-align: center; color: var(--suave); font-size: 13px; padding: 8px 16px 24px; }

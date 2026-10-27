@@ -368,6 +368,9 @@ mostrar_resultado()</pre>
   <li><b>Problema 3.2:</b> se ingresa una expresión posfija (o se trae la obtenida en 3.1), se cargan los valores de sus identificadores
     y se muestra el resultado, con la expresión y los valores sustituidos, junto con la traza de la pila de análisis y la pila de cálculo.
     También se puede consultar la tabla SLR(1).</li>
+  <li><b>Grafos estilo JFLAP:</b> para cada entrada se dibuja el grafo del PDT y el AF de elementos LR(0), y se reproduce el
+    recorrido paso a paso (estado actual, transición aplicada, aristas recorridas, cintas de entrada y salida y pilas), como en el
+    simulador de JFLAP. Además se genera el árbol de análisis sintáctico de cada expresión posfija, con el valor calculado en cada nodo.</li>
 </ul>
 <p><b>Interfaz de consola</b> (<span class="mono">https://gagaismo.github.io/LaboratorioSSL2/consola.html</span>). Una terminal con
   estilo TUI que acepta comandos: <span class="mono">infija &lt;expr&gt;</span> (problema 3.1),
