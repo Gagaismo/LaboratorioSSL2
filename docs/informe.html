@@ -27,7 +27,10 @@
   .encabezado > div:last-child { border-right: none; }
   .titulo { margin-top: 70mm; text-align: center; }
   .titulo p { text-align: center; font-size: 14pt; margin: 4px 0; }
-  .datos { margin-top: auto; font-size: 12pt; }
+  .logo { height: 22mm; }
+  .integrantes { margin: auto auto 8mm; font-size: 12pt; min-width: 110mm; }
+  .integrantes th, .integrantes td { font-size: 12pt; padding: 4px 12px; }
+  .datos { font-size: 12pt; }
   .datos td { border: none; text-align: left; padding: 4px 8px; font-size: 12pt; }
   .figura { text-align: center; margin: 10px 0; break-inside: avoid; }
   .figura img { width: 100%; }
@@ -42,7 +45,7 @@
 
 <div class="portada">
   <div class="encabezado">
-    <div><b>UTN<br>FRT</b></div>
+    <div><img src="logo-utn.png" alt="Logo UTN" class="logo"></div>
     <div><div><b><i>UNIVERSIDAD TECNOLÓGICA NACIONAL</i></b><br><i>Facultad Regional Tucumán</i><br>Departamento: SISTEMAS<br>Cátedra: Sintaxis y Semántica de los Lenguajes</div></div>
     <div><b>TRABAJO PRÁCTICO<br>N° 3</b></div>
   </div>
@@ -51,10 +54,15 @@
     <p><i>Intérprete de Expresiones Algebraicas</i></p>
     <p>Transductor de Pila (PDT) y Analizador SLR(1) con capacidad de cómputo</p>
   </div>
+  <table class="integrantes">
+    <tr><th>Integrantes</th><th>Legajo</th></tr>
+    <tr><td class="izq">Brandan, Lucas</td><td>60911</td></tr>
+    <tr><td class="izq">Brandan, Mariano</td><td>60910</td></tr>
+    <tr><td class="izq">Guebel, Lautaro</td><td>60462</td></tr>
+    <tr><td class="izq">Martí, Mateo</td><td>60244</td></tr>
+    <tr><td class="izq">Peréz Arias, Tomás</td><td>60798</td></tr>
+  </table>
   <table class="datos">
-    <tr><td>Alumno:</td><td>______________________________________</td></tr>
-    <tr><td>Legajo:</td><td>______________________</td></tr>
-    <tr><td>Comisión:</td><td>______________________</td></tr>
     <tr><td>Docente:</td><td>Ing. Jorge Buabud</td></tr>
     <tr><td>Año:</td><td>2026</td></tr>
     <tr><td>Interfaz web:</td><td class="mono">https://gagaismo.github.io/LaboratorioSSL2/</td></tr>
